@@ -2,8 +2,10 @@ module CST2AST
 
 import Syntax;
 import AST;
+import String;
 
-import ParseTree;
+import ParseTree; // VSCode says it is unused, but it breaks when you remove it
+void _() {parse(#Id,"");} // Prevents said unused warning, there should be an annotation for that
 
 /*
  * Implement a mapping from concrete syntax trees (CSTs) to abstract syntax trees (ASTs)
@@ -17,22 +19,81 @@ import ParseTree;
 
 AForm cst2ast(start[Form] sf) {
   Form f = sf.top; // remove layout before and after form
-  return form("", [ ], src=f.src); 
+  return form("<f.name>", cst2ast(f.body), src = f.src); 
 }
 
-default AQuestion cst2ast(Question q) {
-  throw "Not yet implemented <q>";
+ABlock cst2ast(Block b) {
+  return block([cst2ast(q) | Question q <- b.questions], src = b.src);
+}
+
+AQuestion cst2ast(Question q) {
+  switch (q) {
+    case (Question)`<Str a> <Id var> : <Type t>` :
+      return question(cst2ast(a), cst2ast(var), cst2ast(t), none(), src = q.src);
+    case (Question)`<Str a> <Id var> : <Type t> = <Expr expr>` :
+      return question(cst2ast(a), cst2ast(var), cst2ast(t), cst2ast(expr), src = q.src);
+    case (Question)`<Block b>` :
+      return nested(cst2ast(b), src = q.src);
+    case (Question)`if ( <Expr e> ) <Block then>`:
+      return ifthen(cst2ast(e), cst2ast(then), block([]), src = q.src);
+    case (Question)`if ( <Expr e> ) <Block then> else <Block other>`:
+      return ifthen(cst2ast(e), cst2ast(then), cst2ast(other), src = q.src);
+
+    default: throw "Unimplemented question type <q>";
+  }
 }
 
 AExpr cst2ast(Expr e) {
   switch (e) {
-    case (Expr)`<Id x>`: return ref(id("<x>", src=x.src), src=x.src);
-    // etc.
+    case (Expr)`<Id x>`: return ref(cst2ast(x), src=x.src);
+    case (Expr)`<Int i>`: return var(cst2ast(i), src=i.src);
+    case (Expr)`<Bool b>`: return var(cst2ast(b), src=b.src);
+
+    case (Expr)`( <Expr e> )`: return cst2ast(e);
+
+    case (Expr)`! <Expr e>`: return not(cst2ast(e), src=e.src);
+    case (Expr)`- <Expr e>`: return neg(cst2ast(e), src=e.src);
+    case (Expr)`+ <Expr e>`: return pos(cst2ast(e), src=e.src);
+
+    case (Expr)`<Expr l> * <Expr r>`: return mul(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> / <Expr r>`: return div(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> + <Expr r>`: return add(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> - <Expr r>`: return sub(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> == <Expr r>`: return eq(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> != <Expr r>`: return neq(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> \< <Expr r>`: return lt(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> \> <Expr r>`: return gt(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> \<= <Expr r>`: return lte(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> \>= <Expr r>`: return gte(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> && <Expr r>`: return and(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> || <Expr r>`: return or(cst2ast(l), cst2ast(r), src=e.src);
     
     default: throw "Unhandled expression: <e>";
   }
 }
 
-default AType cst2ast(Type t) {
-  throw "Not yet implemented <t>";
+AType cst2ast(Type t) {
+  switch (t) {
+    case (Type)`boolean`: return tbool();
+    case (Type)`integer`: return tint();
+    case (Type)`string`: return tstr();
+
+    default: throw "Invalid type: <t>";
+  }
+}
+
+AId cst2ast(Id i) {
+  return id("<i>", src=i.src);
+}
+
+AStr cst2ast(Str name) {
+  return string("<name>", src=name.src);
+}
+
+AInt cst2ast(Int v) {
+  return integer(toInt("<v>"), src=v.src);
+}
+
+ABool cst2ast(Bool b) {
+  return boolean("<b>", src=b.src);
 }
