@@ -54,4 +54,4 @@ data AInt(loc src = |tmp:///|)
   = integer(int val);
 
 data ABool(loc src = |tmp:///|)
-  = boolean(str val);
+  = boolean(bool val);

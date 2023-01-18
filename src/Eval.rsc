@@ -57,7 +57,7 @@ Value eval(AExpr e, VEnv venv) {
   list[Value] r = [eval(x, venv) | AExpr x <- e];
   switch (e) {
     case ref(id(str x)): return venv[x];
-    case var(boolean(str b)): return vbool(b == "true");
+    case var(boolean(bool b)): return vbool(b);
     case var(integer(int i)): return vint(i);
     case var(string(str s)): return vstr(s);
     case not(_): return vbool(!r[0].b);

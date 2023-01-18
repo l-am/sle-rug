@@ -87,7 +87,7 @@ AId cst2ast(Id i) {
 }
 
 AStr cst2ast(Str name) {
-  return string("<name>", src=name.src);
+  return string("<name>"[1..-1], src=name.src);
 }
 
 AInt cst2ast(Int v) {
@@ -95,5 +95,5 @@ AInt cst2ast(Int v) {
 }
 
 ABool cst2ast(Bool b) {
-  return boolean("<b>", src=b.src);
+  return boolean("<b>" == "true", src=b.src);
 }
