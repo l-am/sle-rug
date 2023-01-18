@@ -7,7 +7,7 @@ module AST
  * - make sure there is an almost one-to-one correspondence with the grammar
  */
 
-data AForm(loc src = |tmp:///|) = form(str name, ABlock questions); 
+data AForm(loc src = |tmp:///|) = form(str name, ABlock body); 
 
 data ABlock(loc src = |tmp:///|) = block(list[AQuestion] questions);
 

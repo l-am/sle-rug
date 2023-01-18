@@ -19,6 +19,7 @@ TEnv collect(AForm f) {
 
 Log check(AForm f, TEnv tenv, UseDef useDef) {
   return {m | /AQuestion q := f, m <- check(q, tenv, useDef)};
+  // TODO: cyclic errors
 }
 
 // - produce an error if there are declared questions with the same name but different types.

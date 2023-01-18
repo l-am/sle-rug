@@ -1,25 +1,27 @@
 form taxOfficeExample { 
-  "Q1" int1: integer
+  "I1" int1: integer
   if (bool1) {
-    "Q2" bool1: boolean
+    "B1" bool1: boolean
   }
-  {{{{{{{{{"Q2" bool1: boolean}}}}}}}}}
-  if (bool1) "Q3" bool2: boolean
+  {{{{{{{{{"B1" bool1: boolean}}}}}}}}}
+  "I2" int2: integer
+  "B2" bool2: boolean
+  if (bool1) "B2" bool2: boolean
   if (!bool1) {}
-  if (bool1 && bool1) {}
-  if (bool1 || bool1) {}
-  if (bool1 == bool1) {}
-  if (bool1 != bool1) {}
-  if (int1 == int1) {}
-  if (int1 != int1) {}
-  if (int1 >= int1) {}
-  if (int1 <= int1) {}
-  if (int1 > int1) {}
-  if (int1 < int1) {}
-  if (int1 < int1 + int1) {}
-  if (int1 < int1 - int1) {}
-  if (int1 < int1 * int1) {}
-  if (int1 < int1 / int1) {}
-  if (int1 < +int1) {}
-  if (int1 < -int1) {}
+  if (bool1 && bool2) {}
+  if (bool1 || bool2) {}
+  if (bool1 == bool2) "B3" bool3: boolean
+  if (bool1 != bool2) {}
+  if (int1 == int2) "I3" int3: integer
+  if (int1 != int2) {}
+  if (int1 >= int2) {}
+  if (int1 <= int2) {}
+  if (int1 > int2) {}
+  if (int1 < int2) {}
+  if (int1 < int2 + int3) {}
+  if (int1 < int2 - int3) {}
+  if (int1 < int2 * int3) {}
+  if (int1 < int2 / 1) {}
+  if (int1 < +int2) {}
+  if (int1 < -int2) {}
 }
