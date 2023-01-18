@@ -45,7 +45,7 @@ test bool checkBinaryFile() = !(error(_, _) <- checkForm(getAST("binary")));
 test bool checkCyclicFile() {
   Log log = checkForm(getAST("errors"));
   return (true | it && hasToError(err, log) | str err <- [
-    // TODO: Cyclic errors
+    // No stuff for cyclic errors (yet)
   ]);
 }
 
@@ -68,7 +68,6 @@ test bool checkEverythingFile() {
     "Operator cannot be used on tbool()",
     "Conflicing types. Expected tint(), received tbool().",
     "Conflicing types. Expected tbool(), received tint()."
-    // TODO: Cyclic errors
   ]);
 }
 
