@@ -25,13 +25,13 @@ Log check(AForm f, TEnv tenv, UseDef useDef) {
 // - duplicate labels should trigger a warning 
 // - the declared type computed questions should match the type of the expression.
 Log check(question(AStr q, AId i, AType t, AExpr e), TEnv tenv, UseDef useDef) {
-  bool duplVar = any(<d, n, _, _> <- tenv, d != i.src, n == i.name);
-  bool duplVarType = any(<d, n, _, x> <- tenv, d != i.src, n == i.name, t != x);
-  bool duplLabel = any(<d, _, l, _> <- tenv, d != i.src && l == q.name);
-
-  return {warning("Duplicate question variable", q.src) | duplVar && !duplVarType}
-    + {error("Conflicting duplicate question variable", q.src) | duplVarType}
-    + {warning("Duplicate question label", q.src) | duplLabel}
+  bool sameVarDiffLabel = any(<_, n, l, _> <- tenv, n == i.name, l != q.name);
+  bool sameVarDiffType = any(<_, n, _, x> <- tenv, n == i.name, t != x);
+  bool sameLabelDiffVar = any(<_, n, l, _> <- tenv, n != i.name, l == q.name);
+  
+  return {warning("Duplicate question variable", q.src) | sameVarDiffLabel && !sameVarDiffType}
+    + {error("Conflicting duplicate question variable", q.src) | sameVarDiffType}
+    + {warning("Duplicate question label", q.src) | sameLabelDiffVar}
     + check(e, t, tenv, useDef);
 }
 
@@ -49,7 +49,7 @@ Log check(AExpr e, AType expected, TEnv tenv, UseDef useDef) {
   AType subType = tunknown();
 
   for (AExpr x <- e) {
-    AType a = opType(x, tenv, useDef)[0];
+    AType a = typeOf(x, tenv, useDef);
     if (subType != tunknown() && a != subType) diffTypes = true;
     subType = a;
   }
@@ -60,6 +60,8 @@ Log check(AExpr e, AType expected, TEnv tenv, UseDef useDef) {
     + {error("Use of undeclared variable", x.src) | ref(AId x) := e, useDef[x.src] == {}}
     + {error("Conflicing types. Expected <expected>, received <myType>.", e.src) | expected notin {myType, tunknown()} && myType != tunknown()};
 }
+
+AType typeOf(AExpr e, TEnv tenv, UseDef useDef) = opType(e, tenv, useDef)[0];
 
 tuple[AType, set[AType]] opType(AExpr e, TEnv tenv, UseDef useDef) {
   switch (e) {
@@ -78,7 +80,7 @@ tuple[AType, set[AType]] opType(AExpr e, TEnv tenv, UseDef useDef) {
     case gt(_, _): return <tbool(), {tint()}>;
     case lte(_, _): return <tbool(), {tint()}>;
     case gte(_, _): return <tbool(), {tint()}>;
-    case eq(_, _): return <tbool(), {tbool(), tint()}>;
+    case yeq(_, _): return <tbool(), {tbool(), tint()}>;
     case neq(_, _): return <tbool(), {tbool(), tint()}>;
     case and(_, _): return <tbool(), {tbool()}>;
     case or(_, _): return <tbool(), {tbool()}>;

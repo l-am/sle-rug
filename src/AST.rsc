@@ -14,7 +14,7 @@ data ABlock(loc src = |tmp:///|) = block(list[AQuestion] questions);
 data AQuestion(loc src = |tmp:///|)
   = question(AStr text, AId variable, AType datatype, AExpr expr)
   | nested(ABlock b)
-  | ifthen(AExpr expr, ABlock then, ABlock other); 
+  | ifthen(AExpr expr, AQuestion then, AQuestion other); 
 
 data AExpr(loc src = |tmp:///|)
   = var(ABool boolean)
@@ -32,7 +32,7 @@ data AExpr(loc src = |tmp:///|)
   | gt(AExpr l, AExpr r)
   | lte(AExpr l, AExpr r)
   | gte(AExpr l, AExpr r)
-  | eq(AExpr l, AExpr r)
+  | yeq(AExpr l, AExpr r)
   | neq(AExpr l, AExpr r)
   | and(AExpr l, AExpr r)
   | or(AExpr l, AExpr r)

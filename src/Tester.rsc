@@ -43,6 +43,7 @@ test bool checkErrorsFile() {
   }
   return r;
 }
+test bool checkNothingFile() = checkForm(getExampleFile("nothing")) == {};
 test bool checkEverythingFile() {
   Log log = checkForm(getExampleFile("errors"));
   list[str] errs = [
@@ -64,7 +65,7 @@ void printLog(Log log) {
 }
 
 void main() {
-  for (f <- ["binary", "cyclic", "empty", "errors", "tax", "everything"]) {
+  for (f <- ["binary", "cyclic", "empty", "errors", "tax", "everything", "nothing"]) {
     println("Log for <f>.myql:");
     printLog(checkForm(getExampleFile(f)));
     println();

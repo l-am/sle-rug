@@ -17,7 +17,7 @@ syntax Guard = @Foldable bracket "(" Expr expr ")";
 syntax Question
   = ask: Str text Id var ":" Type t ("=" Expr val)?
   | qblock: Block b
-  | ifstmt: "if" Guard guard Block then ("else" Block other)?;
+  | ifstmt: "if" Guard guard Question then ("else" Question other)?;
 
 // TODO: +, -, *, /, &&, ||, !, >, <, <=, >=, ==, !=, literals (bool, int, str)
 // Think about disambiguation using priorities and associativity
@@ -35,7 +35,7 @@ syntax Expr
         | div: Expr l "/"   Expr r)
   > left (add: Expr l "+"   Expr r
         | sub: Expr l "-"   Expr r)
-  > left (eq:  Expr l "=="  Expr r
+  > left (yeq: Expr l "=="  Expr r
         | neq: Expr l "!="  Expr r)
   > left (lt:  Expr l "\<"  Expr r
         | gt:  Expr l "\>"  Expr r

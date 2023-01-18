@@ -1,0 +1,8 @@
+form taxOfficeExample { 
+  "Q1" int1: integer
+  if (bool1) {
+    "Q2" bool1: boolean
+  }
+  {{{{{{{{{"Q2" bool1: boolean}}}}}}}}}
+  if (bool1) "Q3" bool2: boolean
+}

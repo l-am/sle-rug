@@ -20,7 +20,7 @@ form taxOfficeExample {
   "A3" int4: integer = bool1 && bool1
   
   // "Conflicing types. Expected tint(), received tbool()."
-  "A4" int5: integer = int1 != int1
+  "A4" int5: integer = int1 == int1
 
   // TODO
   "A5" int6: integer = int6
@@ -33,4 +33,7 @@ form taxOfficeExample {
   // TODO
   if (bool3) { "Q6" bool4: boolean }
   if (bool4) { "Q7" bool3: boolean }
+
+  // "Use of undeclared variable"
+  "A6" int7 : integer = nope
 }

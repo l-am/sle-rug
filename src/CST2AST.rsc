@@ -34,9 +34,9 @@ AQuestion cst2ast(Question q) {
       return question(cst2ast(a), cst2ast(var), cst2ast(t), cst2ast(expr), src = q.src);
     case (Question)`<Block b>` :
       return nested(cst2ast(b), src = q.src);
-    case (Question)`if ( <Expr e> ) <Block then>`:
-      return ifthen(cst2ast(e), cst2ast(then), block([]), src = q.src);
-    case (Question)`if ( <Expr e> ) <Block then> else <Block other>`:
+    case (Question)`if ( <Expr e> ) <Question then>`:
+      return ifthen(cst2ast(e), cst2ast(then), nested(block([])), src = q.src);
+    case (Question)`if ( <Expr e> ) <Question then> else <Question other>`:
       return ifthen(cst2ast(e), cst2ast(then), cst2ast(other), src = q.src);
 
     default: throw "Unimplemented question type <q>";
@@ -59,7 +59,7 @@ AExpr cst2ast(Expr e) {
     case (Expr)`<Expr l> / <Expr r>`: return div(cst2ast(l), cst2ast(r), src=e.src);
     case (Expr)`<Expr l> + <Expr r>`: return add(cst2ast(l), cst2ast(r), src=e.src);
     case (Expr)`<Expr l> - <Expr r>`: return sub(cst2ast(l), cst2ast(r), src=e.src);
-    case (Expr)`<Expr l> == <Expr r>`: return eq(cst2ast(l), cst2ast(r), src=e.src);
+    case (Expr)`<Expr l> == <Expr r>`: return yeq(cst2ast(l), cst2ast(r), src=e.src);
     case (Expr)`<Expr l> != <Expr r>`: return neq(cst2ast(l), cst2ast(r), src=e.src);
     case (Expr)`<Expr l> \< <Expr r>`: return lt(cst2ast(l), cst2ast(r), src=e.src);
     case (Expr)`<Expr l> \> <Expr r>`: return gt(cst2ast(l), cst2ast(r), src=e.src);
