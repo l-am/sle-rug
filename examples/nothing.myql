@@ -5,4 +5,21 @@ form taxOfficeExample {
   }
   {{{{{{{{{"Q2" bool1: boolean}}}}}}}}}
   if (bool1) "Q3" bool2: boolean
+  if (!bool1) {}
+  if (bool1 && bool1) {}
+  if (bool1 || bool1) {}
+  if (bool1 == bool1) {}
+  if (bool1 != bool1) {}
+  if (int1 == int1) {}
+  if (int1 != int1) {}
+  if (int1 >= int1) {}
+  if (int1 <= int1) {}
+  if (int1 > int1) {}
+  if (int1 < int1) {}
+  if (int1 < int1 + int1) {}
+  if (int1 < int1 - int1) {}
+  if (int1 < int1 * int1) {}
+  if (int1 < int1 / int1) {}
+  if (int1 < +int1) {}
+  if (int1 < -int1) {}
 }

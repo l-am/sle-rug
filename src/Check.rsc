@@ -71,7 +71,7 @@ tuple[AType, set[AType]] opType(AExpr e, TEnv tenv, UseDef useDef) {
     case var(AStr _): return <tstr(), {}>;
     case not(_): return <tbool(), {tbool()}>;
     case neg(_): return <tint(), {tint()}>;
-    case pos(_): return <tint(), {tbool(), tint()}>;
+    case pos(_): return <tint(), {tint()}>;
     case mul(_, _): return <tint(), {tint()}>;
     case div(_, _): return <tint(), {tint()}>;
     case add(_, _): return <tint(), {tint()}>;
