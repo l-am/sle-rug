@@ -1,0 +1,36 @@
+form taxOfficeExample { 
+  "Q1" int1: integer
+
+  "Q2" bool1: boolean
+
+  // "Conflicting duplicate question variable"
+  "Q3" conf: integer
+  "Q4" conf: boolean
+  
+  // "Conflicing types. Expected tbool(), received tint()."
+  if (int1) {}
+
+  // "Operands have different types"
+  "A1" int2: integer = bool1 + int1
+  
+  // "Operator cannot be used on tbool()"
+  "A2" int3: integer = bool1 + bool1
+  
+  // "Conflicing types. Expected tint(), received tbool()."
+  "A3" int4: integer = bool1 && bool1
+  
+  // "Conflicing types. Expected tint(), received tbool()."
+  "A4" int5: integer = int1 != int1
+
+  // TODO
+  "A5" int6: integer = int6
+  
+  // TODO
+  if (bool2) {
+    "Q5" bool2: boolean
+  }
+
+  // TODO
+  if (bool3) { "Q6" bool4: boolean }
+  if (bool4) { "Q7" bool3: boolean }
+}

@@ -41,7 +41,8 @@ data AExpr(loc src = |tmp:///|)
 data AType(loc src = |tmp:///|)
   = tbool()
   | tint()
-  | tstr();
+  | tstr()
+  | tunknown();
 
 data AId(loc src = |tmp:///|)
   = id(str name);

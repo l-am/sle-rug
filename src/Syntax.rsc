@@ -45,12 +45,12 @@ syntax Expr
         | or:  Expr l "||"  Expr r);
   
 syntax Type = Primitive;
-
-lexical Primitive = "boolean" | "integer" | "string";
-
-lexical Bool = "true" | "false";
+lexical Bool = BoolValues;
 lexical Int = [0-9]+;
 lexical Str = [\"] ![\"]* [\"];
 
-keyword Reserved = "if" | "then" | Bool | Primitive;
+
+keyword Primitive = "boolean" | "integer" | "string";
+keyword BoolValues = "true" | "false";
+keyword Reserved = "if" | "then" | BoolValues | Primitive;
 
