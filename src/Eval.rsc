@@ -75,7 +75,7 @@ Value eval(AExpr e, VEnv venv) {
     case neq(_, _): return vbool(r[0] != r[1]);
     case and(_, _): return vbool(r[0].b && r[1].b);
     case or(_, _): return vbool(r[0].b || r[1].b);
-    
+
     default: throw "Unsupported expression <e>";
   }
 }

@@ -52,7 +52,7 @@ start[Form] rename(start[Form] f, loc useOrDef, str newName, UseDef useDef) {
   loc l = ([def | <useOrDef, loc def> <- useDef] + useOrDef)[0];
   list[loc] r = [use | aDef <- [l], <loc use, aDef> <- useDef] + l; // get all uses
   r += [def | aUse <- [r[0]], <aUse, loc def> <- useDef]; // get all defs, as long as there is a use
-  
+
   return visit(f) {
     case Id x => [Id] newName when x.src in r
   }

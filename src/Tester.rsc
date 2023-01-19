@@ -169,7 +169,7 @@ void manualCompile() {
 void manualFlatten() {
   println("\nFlatten test:");
   for(/ifthen(AExpr e, question(_, AId i, _, _), nested(block([]))) <- flatten(getAST("tax"))) {
-    println("if (<expr2js(e, ())>) <i.name>");
+    println("if (<expr2js(e)>) <i.name>");
   }
 }
 

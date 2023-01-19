@@ -39,7 +39,7 @@ Log check(question(AStr q, AId i, AType t, AExpr e), TEnv tenv, UseDef useDef) {
   bool sameVarDiffLabel = any(<_, n, l, _> <- tenv, n == i.name, l != q.name);
   bool sameVarDiffType = any(<_, n, _, x> <- tenv, n == i.name, t != x);
   bool sameLabelDiffVar = any(<_, n, l, _> <- tenv, n != i.name, l == q.name);
-  
+
   return {warning("Duplicate question variable", q.src) | sameVarDiffLabel && !sameVarDiffType}
     + {error("Conflicting duplicate question variable", q.src) | sameVarDiffType}
     + {warning("Duplicate question label", q.src) | sameLabelDiffVar}

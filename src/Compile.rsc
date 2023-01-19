@@ -34,62 +34,76 @@ void compile(AForm f) {
 HTMLElement form2html(AForm f)
   = html([
     head([
-      title([text("Form: <f.name>")]),
+      title([text(f.name)]),
       style([text("div {
                   '  margin: 10px 20px;
                   '}")])
     ]),
     body([
-      h1([text("Form: <f.name>")]),
+      h1([text(f.name)]),
       form(
-        [e | AQuestion q <- f.body.questions, HTMLElement e <- q2els(q)]
-        + input()[\type="submit"][\value="Submit"]
+        [e | AQuestion q <- f.body.questions, HTMLElement e <- q2html(q)]
+        + input()[\type="button"][\value="Submit <f.name>"]
       ),
       script([])[src="./<f.src[extension="js"].file>"]
     ])
   ]);
 
-list[HTMLElement] q2els(nested(block([]))) = [];
-list[HTMLElement] q2els(nested(ABlock b)) = ([] | it + q2els(q) | AQuestion q <- b.questions);
-list[HTMLElement] q2els(ifthen(AExpr e, AQuestion then, AQuestion other))
-    = [div(q2els(then))[id="cond_<e.src.offset>"], div(q2els(other))[id="cond_<e.src.offset+1>"]];
-list[HTMLElement] q2els(question(AStr s, AId i, AType t, AExpr e)) {
-  HTMLElement inp = elTypes[t][id=i.name];
+list[HTMLElement] q2html(nested(block([]))) = [];
+list[HTMLElement] q2html(nested(ABlock b)) = ([] | it + q2html(q) | AQuestion q <- b.questions);
+list[HTMLElement] q2html(ifthen(AExpr e, AQuestion then, AQuestion other))
+  = [div(q2html(then))[id="if_<e.src.offset>"][class="conditional"], 
+    div(q2html(other))[id="else_<e.src.offset>"][class="conditional"]];
+list[HTMLElement] q2html(question(AStr s, AId i, AType t, AExpr e)) {
+  HTMLElement inp = elTypes[t][id=i.name][class="question"];
   if (e != none()) inp.disabled = "";
-  return [div([
-    p([text(s.name)]),
-    inp
-  ])];
+  return [div([p([text(s.name)]), inp])];
 }
 
 str form2js(AForm f) {
-  map[str, AExpr] fm = (i.name:e | /question(_, AId i, _, AExpr e) <- f, e != none());
-  return "const tmap = {checkbox: \"checked\", number: \"valueAsNumber\", text: \"value\"};
-         'function el(s) {return document.getElementById(s);}
-         'function et(t, p) {return [...(p||document).getElementsByTagName(t)];}
-         'function gv(s) {let t = el(s); return t[tmap[t.type]]}
-         'function sv(s, v) {let t = el(s); t[tmap[t.type]] = v; t.value = v;}
-         'function sh(n, b) {
-         '  let s = [el(`cond_${n}`), el(`cond_${n+1}`)];
-         '  if (b) s = [s[1],s[0]];
-         '  s[0].style.display = `none`;
-         '  s[1].style.display = `block`;
-         '}
-         'function update() {
-         '  <for (/ifthen(AExpr e, _, _) <- f) {>sh(<e.src.offset>, <expr2js(e, fm)>);<}>
-         '  <for (/question(_, AId i, _, AExpr e) <- f, e != none()) {>sv(\"<i.name>\", <expr2js(e, fm)>);<}>
-         '  
+  map[AType, str] t2js = (
+    tint(): "0",
+    tbool(): "false",
+    tstr(): "\"\""
+  );
+  return "function subId(id, parent) {return (parent||document).getElementById(id);}
+         'function subTag(tag, parent) {return [...(parent||document).getElementsByTagName(tag)];}
+         'function subClass(cls, parent) {return [...(parent||document).getElementsByClassName(cls)];}
+         '
+         'const form = subTag(`form`)[0];
+         'const v = {<
+          for (/question(_, AId i, AType t, AExpr e) <- f, e == none()) {>
+         '  <i.name>: <t2js[t]>,<
+          }><
+          for (/question(_, AId i, _, AExpr e) <- f, e != none()) {>
+         '  get <i.name>(){return <expr2js(e, prefix="this.")>},<
+          }><
+          for (/ifthen(AExpr e, _, _) <- f) {>
+         '  get $<e.src.offset>(){return <expr2js(e, prefix="this.")>},<
+          }>
+         '};
+         '
+         'function update(e) {
+         '  let t = e?.target;
+         '  if(t) v[t.id] = t[{checkbox: `checked`, number: `valueAsNumber`, text: `value`}[t.type]];
+         '  subClass(`conditional`, form).forEach(x =\> {
+         '    let [type, id] = x.id.split(`_`);
+         '    x.style.display = v[`$${id}`] == (type == `if`) ? `block` : `none`;
+         '  });
+         '  subClass(`question`, form).forEach(x =\> {
+         '    x[x.type == `checkbox` ? `checked` : `value`] = v[x.id];
+         '  });
          '}
          '
-         'et(\"input\", et(\"form\")[0]).forEach(x =\> x.onclick = update);
+         'subTag(`input`, form).forEach(x =\> x.onchange = update);
          'update();
          ";
 }
 
-str expr2js(AExpr e, map[str, AExpr] fm) {
-  list[str] r = [expr2js(x, fm) | AExpr x <- e];
+str expr2js(AExpr e, str prefix = "") {
+  list[str] r = [expr2js(x, prefix=prefix) | AExpr x <- e];
   switch (e) {
-    case ref(id(str x)): return (fm[x] ? none() != none()) ? expr2js(fm[x], fm) : "gv(\"<x>\")";
+    case ref(id(str x)): return "<prefix><x>";
     case var(boolean(bool b)): return "<b>";
     case var(integer(int i)): return "<i>";
     case var(string(str s)): return "\"<s>\"";
