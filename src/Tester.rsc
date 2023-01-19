@@ -20,10 +20,11 @@ AForm getAST(str name) = cst2ast(getCST(name));
 
 Log checkForm(AForm form) = check(form, collect(form), resolve(form)[2]);
 
-bool hasToError(str err, Log log) {
-  bool r = (error(err, _) <- log);
-  if (!r) println("Has to error \"<err>\".");
-  return r;
+bool expectMsgs(str name, set[str] msgs) {
+  set[str] r = {m | /str m <- checkForm(getAST(name))};
+  for (str m <- r - msgs) println("in <name>: unexpected message \"<m>\"");
+  for (str m <- msgs - r) println("in <name>: expected message \"<m>\"");
+  return r == msgs;
 }
 
 VEnv eval(AForm form, list[Input] inp) = (initialEnv(form) | eval(form, i, it) | Input i <- inp);
@@ -36,42 +37,34 @@ test bool usesAndDefsIsCorrect() {
     && defs == {"hasBoughtHouse","hasMaintLoan","hasSoldHouse","sellingPrice","privateDebt","valueResidue"};
 }
 
-test bool checkEmptyFile() = checkForm(getAST("empty")) == {};
+test bool checkEmptyFile() = expectMsgs("empty", {});
+test bool checkTaxFile() = expectMsgs("tax", {});
+test bool checkBinaryFile() = expectMsgs("binary", {});
+test bool checkCyclicFile() = expectMsgs("cyclic", {
+  "Variable (sellingPrice) is not reachable",
+  "Variable (valueResidue) is not reachable",
+  "Variable (privateDebt) is not reachable",
+  "Variable (hasSoldHouse) is not reachable"
+});
+test bool checkErrorsFile()  = expectMsgs("errors", {
+  "Operands have different types",
+  "Use of undeclared variable"
+});
+test bool checkNothingFile() = expectMsgs("nothing", {});
+test bool checkEverythingFile() = expectMsgs("everything", {
+  "Operands have different types",
+  "Use of undeclared variable",
+  "Conflicting duplicate question variable",
+  "Operator cannot be used on tbool()",
+  "Conflicing types. Expected tint(), received tbool().",
+  "Conflicing types. Expected tbool(), received tint().",
+  "Variable (bool2) is not reachable",
+  "Variable (bool3) is not reachable",
+  "Variable (bool4) is not reachable",
+  "Variable (int6) is not reachable"
+});
 
-test bool checkTaxFile() = checkForm(getAST("tax")) == {};
-
-test bool checkBinaryFile() = !(error(_, _) <- checkForm(getAST("binary")));
-
-test bool checkCyclicFile() {
-  Log log = checkForm(getAST("errors"));
-  return (true | it && hasToError(err, log) | str err <- [
-    // No stuff for cyclic errors (yet)
-  ]);
-}
-
-test bool checkErrorsFile() {
-  Log log = checkForm(getAST("errors"));
-  return (true | it && hasToError(err, log) | str err <- [
-    "Operands have different types",
-    "Use of undeclared variable"
-  ]);
-}
-
-test bool checkNothingFile() = checkForm(getAST("nothing")) == {};
-
-test bool checkEverythingFile() {
-  Log log = checkForm(getAST("everything"));
-  return (true | it && hasToError(err, log) | err <- [
-    "Operands have different types",
-    "Use of undeclared variable",
-    "Conflicting duplicate question variable",
-    "Operator cannot be used on tbool()",
-    "Conflicing types. Expected tint(), received tbool().",
-    "Conflicing types. Expected tbool(), received tint()."
-  ]);
-}
-
-test bool testEvalDefault() {
+test bool testEvalDefaults() {
   VEnv v = eval(getAST("tax"), []);
   return v["sellingPrice"] == vint(0) && v["hasMaintLoan"] == vbool(false);
 }
@@ -173,13 +166,15 @@ void manualCompile() {
 }
 
 void manualFlatten() {
-  iprintln(flatten(getAST("tax")));
+  println("\nFlatten test:");
+  for(/ifthen(AExpr e, question(_, AId i, _, _), nested(block([]))) <- flatten(getAST("tax"))) {
+    println("if (<expr2js(e, ())>) <i.name>...");
+  }
 }
 
 void manualRename() {
   start[Form] cst = getCST("tax");
   AForm ast = cst2ast(cst);
-  iprintln(ast);
   println([i.name | /AId i <- ast]);
   loc renameMe = [i.src | /AId i <- ast][2];
   println([i.name | /AId i <- cst2ast(rename(cst, renameMe, "RENAMED", resolve(ast)[2]))]);

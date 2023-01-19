@@ -18,12 +18,27 @@ TEnv collect(AForm f) {
 }
 
 Log check(AForm f, TEnv tenv, UseDef useDef) {
-  return ({} | it + check(q, tenv, useDef) | /AQuestion q := f);
+  set[str] unreachable = {i.name | /question(_, AId i, _, _) := f};
+  solve (unreachable) {
+    unreachable = tryReach(f.body, unreachable);
+  }
+
+  return ({} | it + check(q, tenv, useDef) | /AQuestion q := f)
+    + {error("Variable (<name>) is not reachable", def) | str name <- unreachable, <loc def, name, _, _> <- tenv};
 }
+
+set[str] tryReach(ABlock b, set[str] u) = (u | tryReach(q, it) | AQuestion q <- b.questions);
+set[str] tryReach(nested(ABlock b), set[str] u) = tryReach(b, u);
+set[str] tryReach(ifthen(AExpr e, AQuestion then, AQuestion other), set[str] u) = canCalculate(e, u) ? tryReach(other, tryReach(then, u)) : u;
+set[str] tryReach(question(AStr _, AId i, AType _, AExpr e), set[str] u) = u - {i.name | canCalculate(e, u)};
+
+bool canCalculate(AExpr e, set[str] u) = !any(/AId i <- e, i.name in u);
+
 
 // - produce an error if there are declared questions with the same name but different types.
 // - duplicate labels should trigger a warning 
 // - the declared type computed questions should match the type of the expression.
+Log check(ifthen(AExpr e, _, _), TEnv tenv, UseDef useDef) = check(e, tbool(), tenv, useDef);
 Log check(question(AStr q, AId i, AType t, AExpr e), TEnv tenv, UseDef useDef) {
   bool sameVarDiffLabel = any(<_, n, l, _> <- tenv, n == i.name, l != q.name);
   bool sameVarDiffType = any(<_, n, _, x> <- tenv, n == i.name, t != x);
@@ -34,10 +49,6 @@ Log check(question(AStr q, AId i, AType t, AExpr e), TEnv tenv, UseDef useDef) {
     + {warning("Duplicate question label", q.src) | sameLabelDiffVar}
     + check(e, t, tenv, useDef);
 }
-
-Log check(nested(_), TEnv tenv, UseDef useDef) = {};
-
-Log check(ifthen(AExpr e, _, _), TEnv tenv, UseDef useDef) = check(e, tbool(), tenv, useDef);
 
 // Check operand compatibility with operators.
 // E.g. for an addition node add(lhs, rhs), 
@@ -60,6 +71,8 @@ Log check(AExpr e, AType expected, TEnv tenv, UseDef useDef) {
     + {error("Use of undeclared variable", x.src) | ref(AId x) := e, useDef[x.src] == {}}
     + {error("Conflicing types. Expected <expected>, received <myType>.", e.src) | expected notin {myType, tunknown()} && myType != tunknown()};
 }
+
+default Log check(_, TEnv _, UseDef _) = {};
 
 AType typeOf(AExpr e, TEnv tenv, UseDef useDef) = opType(e, tenv, useDef)[0];
 
