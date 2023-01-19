@@ -20,10 +20,15 @@ AForm getAST(str name) = cst2ast(getCST(name));
 
 Log checkForm(AForm form) = check(form, collect(form), resolve(form)[2]);
 
+void printMsgs(str name) {
+  Log l = checkForm(getAST(name));
+  for (warning(str m, _) <- l) println("[<name>] warning\>\> <m>");
+  for (error(str m, _) <- l) println("[<name>] error\>\> <m>");
+}
 bool expectMsgs(str name, set[str] msgs) {
   set[str] r = {m | /str m <- checkForm(getAST(name))};
-  for (str m <- r - msgs) println("in <name>: unexpected message \"<m>\"");
-  for (str m <- msgs - r) println("in <name>: expected message \"<m>\"");
+  for (str m <- r - msgs) println("[<name>] \>\> <m>");
+  for (str m <- msgs - r) println("[<name>] \<\< <m>");
   return r == msgs;
 }
 
@@ -132,22 +137,15 @@ test bool testRename() {
   return true;
 }
 
-void printLog(Log log) {
-  for (Message m <- log) {
-    println(m);
-  }
-}
-
 void manualErrors() {
+  println("\nErrors test:");
   for (f <- ["binary", "cyclic", "empty", "errors", "tax", "everything", "nothing"]) {
-    println("Log for <f>.myql:");
-    printLog(checkForm(getAST(f)));
-    println();
+    printMsgs(f);
   }
 }
 
 void manualEval() {
-  println("Eval test:");
+  println("\nEval test:\nShould have 123 and 456, not 789");
   AForm tax = getAST("tax");
   VEnv venv = initialEnv(tax);
   println(eval(getAST("tax"), []));
@@ -156,23 +154,27 @@ void manualEval() {
     input("sellingPrice",vint(123)),
     input("privateDebt",vint(456)),
     input("hasSoldHouse",vbool(false)),
-    input("sellingPrice",vint(789)) // expected to be ignored
+    input("sellingPrice",vint(789))
   ]));
 }
 
 void manualCompile() {
-  compile(getAST("binary"));
-  compile(getAST("tax"));
+  println("\nCompile test:");
+  for (f <- ["binary", "tax", "nothing"]) {
+    compile(getAST(f));
+    println("Compiled [<f>]");
+  }
 }
 
 void manualFlatten() {
   println("\nFlatten test:");
   for(/ifthen(AExpr e, question(_, AId i, _, _), nested(block([]))) <- flatten(getAST("tax"))) {
-    println("if (<expr2js(e, ())>) <i.name>...");
+    println("if (<expr2js(e, ())>) <i.name>");
   }
 }
 
 void manualRename() {
+  println("\nRename test:");
   start[Form] cst = getCST("tax");
   AForm ast = cst2ast(cst);
   println([i.name | /AId i <- ast]);
