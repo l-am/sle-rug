@@ -13,15 +13,11 @@ alias Log = set[Message];
 
 // To avoid recursively traversing the form, use the `visit` construct
 // or deep match (e.g., `for (/question(...) := f) {...}` ) 
-TEnv collect(AForm f) {
-  return {<i.src, i.name, q.name, t> | /question(AStr q, AId i, AType t, _) := f};
-}
+TEnv collect(AForm f) = {<i.src, i.name, q.name, t> | /question(AStr q, AId i, AType t, _) := f};
 
 Log check(AForm f, TEnv tenv, UseDef useDef) {
   set[str] unreachable = {i.name | /question(_, AId i, _, _) := f};
-  solve (unreachable) {
-    unreachable = tryReach(f.body, unreachable);
-  }
+  solve (unreachable) {unreachable = tryReach(f.body, unreachable);}
 
   return ({} | it + check(q, tenv, useDef) | /AQuestion q := f)
     + {error("Variable (<name>) is not reachable", def) | str name <- unreachable, <loc def, name, _, _> <- tenv};
@@ -30,7 +26,7 @@ Log check(AForm f, TEnv tenv, UseDef useDef) {
 set[str] tryReach(ABlock b, set[str] u) = (u | tryReach(q, it) | AQuestion q <- b.questions);
 set[str] tryReach(nested(ABlock b), set[str] u) = tryReach(b, u);
 set[str] tryReach(ifthen(AExpr e, AQuestion then, AQuestion other), set[str] u) = canCalculate(e, u) ? tryReach(other, tryReach(then, u)) : u;
-set[str] tryReach(question(AStr _, AId i, AType _, AExpr e), set[str] u) = u - {i.name | canCalculate(e, u)};
+set[str] tryReach(question(_, AId i, _, AExpr e), set[str] u) = u - {i.name | canCalculate(e, u)};
 
 bool canCalculate(AExpr e, set[str] u) = !any(/AId i <- e, i.name in u);
 
@@ -66,13 +62,17 @@ Log check(AExpr e, AType expected, TEnv tenv, UseDef useDef) {
   }
 
   return {*check(x, tunknown(), tenv, useDef) | AExpr x <- e}
-    + {error("Operands have different types", e.src) | diffTypes}
-    + {error("Operator cannot be used on <subType>", e.src) | !diffTypes && subType notin mySubTypes+tunknown()}
-    + {error("Use of undeclared variable", x.src) | ref(AId x) := e, useDef[x.src] == {}}
-    + {error("Conflicing types. Expected <expected>, received <myType>.", e.src) | expected notin {myType, tunknown()} && myType != tunknown()};
+    + {error("Operands have different types", e.src) 
+      | diffTypes}
+    + {error("Operator cannot be used on <subType>", e.src)
+      | !diffTypes && subType notin mySubTypes+tunknown()}
+    + {error("Use of undeclared variable", x.src)
+      | ref(AId x) := e, useDef[x.src] == {}}
+    + {error("Conflicing types. Expected <expected>, received <myType>.", e.src)
+      | expected notin {myType, tunknown()} && myType != tunknown()};
 }
 
-default Log check(_, TEnv _, UseDef _) = {};
+default Log check(_, _, _) = {};
 
 AType typeOf(AExpr e, TEnv tenv, UseDef useDef) = opType(e, tenv, useDef)[0];
 

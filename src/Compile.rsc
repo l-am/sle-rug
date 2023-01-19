@@ -2,6 +2,7 @@ module Compile
 
 import AST;
 import Resolve;
+
 import IO;
 import lang::html::AST;
 import lang::html::IO;
@@ -18,8 +19,6 @@ import lang::html::IO;
  * - be sure to generate uneditable widgets for computed questions!
  * - if needed, use the name analysis to link uses to definitions
  */
-
-alias Els = list[HTMLElement];
 
 map[AType, HTMLElement] elTypes = (
   tbool(): input()[\type="checkbox"],
@@ -50,11 +49,11 @@ HTMLElement form2html(AForm f)
     ])
   ]);
 
-Els q2els(nested(block([]))) = [];
-Els q2els(nested(ABlock b)) = ([] | it + q2els(q) | AQuestion q <- b.questions);
-Els q2els(ifthen(AExpr e, AQuestion then, AQuestion other))
+list[HTMLElement] q2els(nested(block([]))) = [];
+list[HTMLElement] q2els(nested(ABlock b)) = ([] | it + q2els(q) | AQuestion q <- b.questions);
+list[HTMLElement] q2els(ifthen(AExpr e, AQuestion then, AQuestion other))
     = [div(q2els(then))[id="cond_<e.src.offset>"], div(q2els(other))[id="cond_<e.src.offset+1>"]];
-Els q2els(question(AStr s, AId i, AType t, AExpr e)) {
+list[HTMLElement] q2els(question(AStr s, AId i, AType t, AExpr e)) {
   HTMLElement inp = elTypes[t][id=i.name];
   if (e != none()) inp.disabled = "";
   return [div([

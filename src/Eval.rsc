@@ -30,9 +30,8 @@ map[AType, Value] defaults = (
 
 // produce an environment which for each question has a default value
 // (e.g. 0 for int, "" for str etc.)
-VEnv initialEnv(AForm f) {
-  return (i.name: defaults[t] | /question(_, AId i, AType t, _) := f);
-}
+VEnv initialEnv(AForm f)
+  = (i.name: defaults[t] | /question(_, AId i, AType t, _) := f);
 
 // Because of out-of-order use and declaration of questions
 // we use the solve primitive in Rascal to find the fixpoint of venv.
@@ -45,13 +44,14 @@ VEnv eval(AForm f, Input inp, VEnv venv) {
 // evaluate conditions for branching,
 // evaluate inp and computed questions to return updated VEnv
 VEnv eval(nested(ABlock b), Input inp, VEnv venv)
-    = (venv | eval(q, inp, it) | AQuestion q <- b.questions);
+  = (venv | eval(q, inp, it) | AQuestion q <- b.questions);
 VEnv eval(ifthen(AExpr e, AQuestion then, AQuestion other), Input inp, VEnv venv)
-    = eval(eval(e, venv).b ? then : other, inp, venv);
-VEnv eval(question(AStr s, AId i, AType t, AExpr e), Input inp, VEnv venv) 
-    = venv + (i.name: e == none() ? (i.name == inp.question ? inp.v : venv[i.name]) : eval(e, venv));
-
-int MAX64 = (1 | it * 2 | _ <- [1..63]) - 1;
+  = eval(eval(e, venv).b ? then : other, inp, venv);
+VEnv eval(question(AStr s, AId i, AType t, AExpr e), Input inp, VEnv venv) {
+  if (i.name == inp.question) venv[i.name] = inp.v;
+  if (e != none()) venv[i.name] = eval(e, venv);
+  return venv;
+}
 
 Value eval(AExpr e, VEnv venv) {
   list[Value] r = [eval(x, venv) | AExpr x <- e];
@@ -64,7 +64,7 @@ Value eval(AExpr e, VEnv venv) {
     case neg(_): return vint(-r[0].n);
     case pos(_): return vint(r[0].n);
     case mul(_, _): return vint(r[0].n * r[1].n);
-    case div(_, _): return vint(r[1].n == 0 ? MAX64 : (r[0].n /  r[1].n));
+    case div(_, _): return vint(r[0].n / r[1].n); // Throws on /0
     case add(_, _): return vint(r[0].n + r[1].n);
     case sub(_, _): return vint(r[0].n - r[1].n);
     case lt(_, _): return vbool(r[0].n < r[1].n);

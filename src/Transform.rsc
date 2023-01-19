@@ -3,7 +3,10 @@ module Transform
 import Syntax;
 import Resolve;
 import AST;
-import ParseTree;
+
+import ParseTree; // VSCode says it is unused, but it is required
+
+value _() = #Tree; // Suppresses said unused warning
 
 /* 
  * Transforming QL forms
