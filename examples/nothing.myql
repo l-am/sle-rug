@@ -1,4 +1,6 @@
-form taxOfficeExample { 
+form taxOfficeExample {
+  "S1" str1: string
+  "S1" str1: string
   "I1" int1: integer
   if (bool1) {
     "B1" bool1: boolean
